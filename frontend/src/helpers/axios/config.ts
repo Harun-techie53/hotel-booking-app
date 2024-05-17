@@ -1,0 +1,175 @@
+/* eslint-disable no-async-promise-executor */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import axios from "axios";
+import axiosInstance from "./axiosInstance";
+import { utils } from "../utils";
+
+type HTTPRequestCommon = {
+  apiPath: string;
+  data?: any;
+  config?: object;
+  withCredentials?: boolean;
+  external?: boolean;
+};
+
+function transformConfig(config: any, data: any) {
+  let transformedData = data;
+  if (
+    config &&
+    utils.isDefined(config, "headers") &&
+    utils.isDefined(config.headers, "Content-Type") &&
+    config.headers["Content-Type"] === "application/x-www-form-urlencoded"
+  ) {
+    transformedData = JSON.stringify(data);
+  }
+  return transformedData;
+}
+
+const apiGet = async ({
+  apiPath,
+  config = {},
+  withCredentials = false,
+  external = false,
+}: HTTPRequestCommon) => {
+  const axiosToUse = external ? axios : axiosInstance();
+  const fullUrl = apiPath;
+  const newConfig = {
+    ...config,
+    withCredentials,
+  };
+
+  try {
+    const response = await axiosToUse.get(fullUrl, newConfig);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const status = error.response.status;
+      const errorMessage = extractErrorMessage(error.response.data);
+      return { status, errorMessage };
+    } else if (error.request) {
+      return { status: 500, errorMessage: "No response from server" };
+    } else {
+      return { status: 500, errorMessage: "Request setup error" };
+    }
+  }
+};
+
+const apiPost = async ({
+  apiPath,
+  data,
+  config = {},
+  withCredentials = false,
+  external = false,
+}: HTTPRequestCommon) => {
+  const newConfig = {
+    ...config,
+    withCredentials,
+  };
+
+  const transformedData = transformConfig(newConfig, data);
+  const axiosToUse = external ? axios : axiosInstance();
+  const fullUrl = apiPath;
+  try {
+    const response = await axiosToUse.post(fullUrl, transformedData, newConfig);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      const status = error.response.status;
+      const errorMessage = extractErrorMessage(error.response.data);
+      return { status, errorMessage };
+    } else if (error.request) {
+      return { status: 500, errorMessage: "No response from server" };
+    } else {
+      return { status: 500, errorMessage: "Request setup error" };
+    }
+  }
+};
+
+function apiPut({
+  apiPath,
+  data,
+  config = {},
+  external = false,
+}: HTTPRequestCommon) {
+  const newConfig = {
+    ...config,
+  };
+  const transformedData = transformConfig(newConfig, data);
+  const axiosToUse = external ? axios : axiosInstance();
+  const fullUrl = apiPath;
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await axiosToUse.put(
+        fullUrl,
+        transformedData,
+        newConfig
+      );
+      resolve(response.data);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function apiPatch({
+  apiPath,
+  data,
+  config = {},
+  external = false,
+}: HTTPRequestCommon) {
+  const newConfig = {
+    ...config,
+  };
+  const transformedData = transformConfig(newConfig, data);
+  const axiosToUse = external ? axios : axiosInstance();
+  const fullUrl = apiPath;
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await axiosToUse.patch(
+        fullUrl,
+        transformedData,
+        newConfig
+      );
+      resolve(response.data);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function apiDelete({
+  apiPath,
+  config = {},
+  external = false,
+}: HTTPRequestCommon) {
+  const newConfig = {
+    ...config,
+  };
+  const axiosToUse = external ? axios : axiosInstance();
+  const fullUrl = apiPath;
+
+  return new Promise(async (resolve, reject) => {
+    try {
+      const response = await axiosToUse.delete(fullUrl, newConfig);
+      resolve(response.data);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export const extractErrorMessage = (htmlContent: string): string => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlContent, "text/html");
+  const preElement = doc.querySelector("pre");
+  if (preElement) {
+    const errorMessageOnly = preElement.innerHTML.split("<br>")?.[0];
+    return errorMessageOnly || "";
+  } else {
+    return "Unknown error";
+  }
+};
+
+export { apiDelete, apiGet, apiPost, apiPut, apiPatch };
