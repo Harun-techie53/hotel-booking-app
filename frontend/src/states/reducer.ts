@@ -2,11 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import authSlice from "./authSlice";
 import { composeWithDevTools } from "@redux-devtools/extension";
 import toastSlice from "./toastSlice";
+import searchSlice from "./searchSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authSlice,
     toast: toastSlice,
+    search: searchSlice,
   },
   devTools: composeWithDevTools({}),
 });

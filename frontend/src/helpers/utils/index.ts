@@ -92,6 +92,10 @@ class Utils {
   //     return date;
   //   };
 
+  isHTML = (text: string) => {
+    return /<[a-z][\s\S]*>/i.test(text);
+  };
+
   compareTwoDates = (date1: Date, date2: Date): number => {
     let firstDate = new Date(
       date1.getFullYear(),
@@ -121,9 +125,9 @@ class Utils {
   //     return moment(date).format(format);
   //   };
 
-//   deepClone = (arg: any): any => {
-//     return _.cloneDeep(arg);
-//   };
+  //   deepClone = (arg: any): any => {
+  //     return _.cloneDeep(arg);
+  //   };
 
   getUserShortName = (name: string) => {
     const arr = name.split(" ");

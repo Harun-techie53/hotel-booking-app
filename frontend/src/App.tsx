@@ -7,6 +7,10 @@ import {
 import Layout from "./layouts/Layout";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import CreateHotel from "./pages/CreateHotel";
+import MyHotels from "./pages/MyHotels";
+import EditHotel from "./pages/EditHotel";
+import Search from "./pages/Search";
 
 function App() {
   return (
@@ -16,7 +20,7 @@ function App() {
           <Route
             path="/"
             element={
-              <Layout>
+              <Layout isSearchbarShow={true}>
                 <p>Home Page</p>
               </Layout>
             }
@@ -24,15 +28,39 @@ function App() {
           <Route
             path="/search"
             element={
-              <Layout>
-                <p>Search Page</p>
+              <Layout isSearchbarShow={true}>
+                <Search />
+              </Layout>
+            }
+          />
+          <Route
+            path="/create-hotel"
+            element={
+              <Layout isHeroShow={false}>
+                <CreateHotel />
+              </Layout>
+            }
+          />
+          <Route
+            path="/my-hotels"
+            element={
+              <Layout isHeroShow={false}>
+                <MyHotels />
+              </Layout>
+            }
+          />
+          <Route
+            path="/edit-hotel/:hotelId"
+            element={
+              <Layout isHeroShow={false}>
+                <EditHotel />
               </Layout>
             }
           />
           <Route
             path="/sign-up"
             element={
-              <Layout isAuth={true}>
+              <Layout isHeroShow={false}>
                 <Register />
               </Layout>
             }
@@ -40,7 +68,7 @@ function App() {
           <Route
             path="/sign-in"
             element={
-              <Layout isAuth={true}>
+              <Layout isHeroShow={false}>
                 <Login />
               </Layout>
             }

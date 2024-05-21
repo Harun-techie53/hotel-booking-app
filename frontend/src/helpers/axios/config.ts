@@ -10,6 +10,7 @@ type HTTPRequestCommon = {
   config?: object;
   withCredentials?: boolean;
   external?: boolean;
+  isMultipart?: boolean;
 };
 
 function transformConfig(config: any, data: any) {
@@ -21,6 +22,8 @@ function transformConfig(config: any, data: any) {
     config.headers["Content-Type"] === "application/x-www-form-urlencoded"
   ) {
     transformedData = JSON.stringify(data);
+  } else if (data instanceof FormData) {
+    transformedData = data;
   }
   return transformedData;
 }
@@ -60,11 +63,19 @@ const apiPost = async ({
   config = {},
   withCredentials = false,
   external = false,
+  isMultipart = false,
 }: HTTPRequestCommon) => {
-  const newConfig = {
+  const newConfig: any = {
     ...config,
     withCredentials,
   };
+
+  if (isMultipart) {
+    newConfig.headers = {
+      ...newConfig.headers,
+      "Content-Type": "multipart/form-data",
+    };
+  }
 
   const transformedData = transformConfig(newConfig, data);
   const axiosToUse = external ? axios : axiosInstance();
@@ -73,9 +84,17 @@ const apiPost = async ({
     const response = await axiosToUse.post(fullUrl, transformedData, newConfig);
     return response.data;
   } catch (error: any) {
+    console.log("error", error.response);
     if (error.response) {
-      const status = error.response.status;
-      const errorMessage = extractErrorMessage(error.response.data);
+      let status;
+      let errorMessage;
+      if (!utils.isHTML(error.response)) {
+        status = 400;
+        errorMessage = error.response.data.message;
+      } else {
+        status = error.response.status;
+        errorMessage = extractErrorMessage(error.response.data);
+      }
       return { status, errorMessage };
     } else if (error.request) {
       return { status: 500, errorMessage: "No response from server" };
@@ -85,32 +104,52 @@ const apiPost = async ({
   }
 };
 
-function apiPut({
+const apiPut = async ({
   apiPath,
   data,
   config = {},
   external = false,
-}: HTTPRequestCommon) {
-  const newConfig = {
+  isMultipart = false,
+  withCredentials,
+}: HTTPRequestCommon) => {
+  const newConfig: any = {
     ...config,
+    withCredentials,
   };
+
+  if (isMultipart) {
+    newConfig.headers = {
+      ...newConfig.headers,
+      "Content-Type": "multipart/form-data",
+    };
+  }
+
   const transformedData = transformConfig(newConfig, data);
   const axiosToUse = external ? axios : axiosInstance();
   const fullUrl = apiPath;
 
-  return new Promise(async (resolve, reject) => {
-    try {
-      const response = await axiosToUse.put(
-        fullUrl,
-        transformedData,
-        newConfig
-      );
-      resolve(response.data);
-    } catch (error) {
-      reject(error);
+  try {
+    const response = await axiosToUse.put(fullUrl, transformedData, newConfig);
+    return response.data;
+  } catch (error: any) {
+    if (error.response) {
+      let status;
+      let errorMessage;
+      if (!utils.isHTML(error.response)) {
+        status = 400;
+        errorMessage = error.response.data.message;
+      } else {
+        status = error.response.status;
+        errorMessage = extractErrorMessage(error.response.data);
+      }
+      return { status, errorMessage };
+    } else if (error.request) {
+      return { status: 500, errorMessage: "No response from server" };
+    } else {
+      return { status: 500, errorMessage: "Request setup error" };
     }
-  });
-}
+  }
+};
 
 function apiPatch({
   apiPath,

@@ -6,6 +6,10 @@ dotenv.config();
 import dbConnect from "../config/db.config";
 import authRouter from "./routes/authRouter";
 import path from "path";
+import cloudinaryConnect from "../config/cloudinary.config";
+import myHotelRouter from "./routes/myHotelRouter";
+
+cloudinaryConnect();
 
 const app = express();
 app.use(express.json());
@@ -23,6 +27,7 @@ dbConnect();
 app.use(express.static(path.join(__dirname, "../../../frontend/dist")));
 
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/my-hotels", myHotelRouter);
 
 app.get("*", (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../../../frontend/dist/index.html"));
